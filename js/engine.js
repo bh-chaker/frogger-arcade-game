@@ -447,7 +447,7 @@ var Engine = (function(global) {
         ctx.strokeStyle = "#67200A";
         ctx.textAlign = 'left';
         ctx.font="30px Georgia";
-        ctx.fillText("1) Use arrows to move.", 10, 6.3*tileHeight);
+        ctx.fillText("1) Use arrow keys to move.", 10, 6.3*tileHeight);
         ctx.fillText("2) Collect all 3 gems to make the key appear.", 10, 6.6*tileHeight);
         ctx.fillText("3) Collect the key to advance to next level.", 10, 6.9*tileHeight);
     }
