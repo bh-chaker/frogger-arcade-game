@@ -420,8 +420,18 @@ var Engine = (function(global) {
         }
 
         ctx.lineWidth = 2;
-        ctx.fillText("You are dead!",canvas.width/2, canvas.height/2);
-        ctx.strokeText("You are dead!",canvas.width/2, canvas.height/2);
+        if (player.lives>2){
+            ctx.fillText("Only "+(player.lives-1)+" lives left!",canvas.width/2, 280);
+            ctx.strokeText("Only "+(player.lives-1)+" lives left!",canvas.width/2, 280);
+        }
+        else if (player.lives==2){
+            ctx.fillText("Only one life left!",canvas.width/2, 280);
+            ctx.strokeText("Only one life left!",canvas.width/2, 280);
+        }
+        else{
+            ctx.fillText("Game Over!!",canvas.width/2, 280);
+            ctx.strokeText("Game Over!!",canvas.width/2, 280);
+        }
     }
 
     /* This function does nothing but it could have been a good place to
