@@ -1,6 +1,10 @@
-frontend-nanodegree-arcade-game
+Fogger Classic Arcade Game
 ===============================
+This is a small game developped with HTML5 Canvas.
 
-Students should use this rubric: https://www.udacity.com/course/viewer#!/c-ud015/l-3072058665/m-3072588797
+You can access the game here: http://bh-chaker.github.io/frogger-arcade-game/
 
-for self-checking their submission.
+# Instructions to play the game:
+* Use arrow keys to move.
+* Collect all 3 gems to make the key appear.
+* Collect the key to advance to next level.
