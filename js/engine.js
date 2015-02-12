@@ -66,10 +66,10 @@ var Engine = (function(global) {
         var now = Date.now(),
             dt = (now - lastTime) / 1000.0;
 
-        /* Call our update/render functions, pass along the time delta to
-         * our update function since it may be used for smooth animation.
-         */
-         if (gameOver){
+        if (gameOver){
+            /* If the game is over, display the screen only once
+             * and wait for key press from the user
+             */
             if (!gameOverDisplayed){
                 displayGameOverScreen();
                 gameOverDisplayed = true;
@@ -77,7 +77,30 @@ var Engine = (function(global) {
             }
          }
          else{
-            update(dt);
+            if (player.dead){
+                // Freeze the game for few seconds
+                waitForPlayerDead();
+            }
+            else if (player.lives==0){
+                // If the player just died, we need to freeze the game
+                freezeGameForPlayerDead();
+            }
+            else if (level.loadingNextLevel){
+                // Display animation after the player completes a level
+                loadingNextLevelAnimation(dt);
+            }
+            else if (key.displayed && key.x==player.x && key.y==player.y){
+                /*
+                 * If the key is displayed and the Player collected it,
+                 * we increment the level and start the animation
+                 */
+                startLoadingNextLevelAnimation();
+            }
+            else{
+                // If none of the above is true, we run a normal loop
+                update(dt);
+            }
+
             render();
          }
 
@@ -93,12 +116,11 @@ var Engine = (function(global) {
         win.requestAnimationFrame(main);
     };
 
-    /* This function does some initial setup that should only occur once,
-     * particularly setting the lastTime variable that is required for the
-     * game loop.
+    /* This function does some initial setup. It is used at at the start of the game
+     * after a GameOver
      */
     function init() {
-        reset();
+        // Initial values for game state
         startTime = Date.now();
         lastTime = Date.now();
         level = {
@@ -109,6 +131,9 @@ var Engine = (function(global) {
 
         gameOver = false;
         gameOverDisplayed = false;
+
+        // This function will init all components: player, allEnemies, allGems and key
+        init_all();
 
         main();
     }
@@ -123,68 +148,79 @@ var Engine = (function(global) {
      * on the entities themselves within your app.js file).
      */
     function update(dt) {
-        updateEntities(dt);
-        // checkCollisions();
+        updateEnemyPositions(dt);
+        checkCollisions();
     }
 
-    /* This is called by the update function  and loops through all of the
-     * objects within your allEnemies array as defined in app.js and calls
-     * their update() methods. It will then call the update function for your
-     * player object. These update methods should focus purely on updating
-     * the data/properties related to  the object. Do your drawing in your
-     * render methods.
-     */
-    function updateEntities(dt) {
-        if (level.loadingNextLevel){
-            if (topMargin < offsetY){
-                topMargin += 150 * dt;
-            }
-            else{
-                topMargin -= offsetY;
-                level.currentRow += 1;
-                if (level.currentRow < numRows){
-                    rowTiles.unshift(rowTiles.pop());
-                }
-                else{
-                    init_enemies();
-                    init_gems();
-                    topMargin = 0;
-                    rowTiles.unshift(rowTiles.pop());
-                    level.loadingNextLevel = false;
-                    player.y = numRows - 2;
-                    doc.addEventListener('keyup', playerKeyupListener);
-                }
+    function checkCollisions(){
+        // Check if user collected a Gem
+        var length = allGems.length;
+        for (var i=length-1; i>=0; i--){
+            var gem = allGems[i];
+            if (player.y==gem.y && player.x==gem.x){
+                allGems.splice(i, 1);
+                player.gems++;
             }
         }
-        else{
-            allEnemies.forEach(function(enemy) {
-                if (!player.dead){
-                    enemy.update(dt + dt*level.currentLevel*0.5);
-                }
-            });
-            player.update(dt);
-            if (player.lives==0){
+
+        // Check if Player collected all Gems
+        if (allGems.length==0){
+            key.displayed = true;
+        }
+
+        /*
+         * Check if player collided with an Enemy.
+         * Used the value '0.7' instead of '1.0' so that the Bug visually touches the player
+         */
+        length = allEnemies.length;
+        for (var i=0; i<length; i++){
+            var enemy = allEnemies[i];
+            if (player.y==enemy.y && Math.abs(player.x - enemy.x) < 0.7){
+                player.dead = true;
+                player.deadSince = Date.now();
+                player.lives--;
                 doc.removeEventListener('keyup', playerKeyupListener);
-                gameOver = true;
-                gameOverTime = Date.now();
-                gameOverDisplayed = false;
             }
         }
-
     }
 
-    /* This function initially draws the "game level", it will then call
-     * the renderEntities function. Remember, this function is called every
-     * game tick (or loop of the game engine) because that's how games work -
-     * they are flipbooks creating the illusion of animation but in reality
-     * they are just drawing the entire screen over and over.
+    // Helper function used to freeze the game when the player dies
+    function freezeGameForPlayerDead(){
+        doc.removeEventListener('keyup', playerKeyupListener);
+        gameOver = true;
+        gameOverTime = Date.now();
+        gameOverDisplayed = false;
+    }
+
+    /* Helper function used to check if we need to un-freeze the game
+     * after few seconds (should be 2 seconds in this case)
+     */
+    function waitForPlayerDead(){
+        // If the player is dead, the game freezes for few seconds.
+        if (Date.now()-player.deadSince > 2000){
+            // Un-freeze the game and place the player at start point
+            player.dead = false;
+            player.x = startX;
+            player.y = startY;
+            doc.addEventListener('keyup', playerKeyupListener);
+        }
+    }
+
+    /* Move all enemy players a 'step' to the right. The step will depend on
+     * currentLevel resulting a higher speed when level increases.
+     */
+    function updateEnemyPositions(dt) {
+        allEnemies.forEach(function(enemy) {
+            if (!player.dead){
+                enemy.update(dt + dt*level.currentLevel*0.5);
+            }
+        });
+    }
+
+    /* Display all screen when game is not over
      */
     function render() {
-        /* This array holds the relative URL to the image used
-         * for that particular row of the game level.
-         */
         var row, col;
-
 
         // Disploy bottom blocks at the top to give an impression of infinite length
         for (col = 0; col < numCols; col++) {
@@ -211,72 +247,104 @@ var Engine = (function(global) {
                 ctx.drawImage(Resources.get(imgPath), col * tileWidth, topMargin + row * offsetY);
             }
         }
-
+        // Display footer: lives count, gems collected, level and time
         displayFooter();
+
+        // Display instructions on how to play the game
         displayInstructions();
 
+        // Render entities
         renderEntities();
 
+        // Display the text 'Loading Next Level'
         if (level.loadingNextLevel){
             displayLoadingNextLevel();
         }
 
+        // Display how many lives are left
         if (player.dead){
             displayPlayerDead();
         }
 
     }
 
+    /*
+     * This functions slowly shifts the rowTiles array.
+     * It produces a smooth transition between levels.
+     */
+    function loadingNextLevelAnimation(dt){
+        // Slowly increment topMargin
+        if (topMargin < offsetY){
+            topMargin += 150 * dt;
+        }
+        else{
+            // When topMargin exceeds offsetY, we increment level.currentRow
+            topMargin -= offsetY;
+            level.currentRow += 1;
+            if (level.currentRow < numRows){
+                rowTiles.unshift(rowTiles.pop());
+            }
+        }
+
+        // Move the player down slowly
+        if (level.currentRow < numRows-3){
+            player.y = level.currentRow;
+        }
+        else{
+            player.y = numRows-3;
+        }
+        player.y += 1.0*topMargin/offsetY;
+
+        /* When we do a complete circular shif of the array,
+         * level.currentRow reaches the number of rows. Then we stop the animation
+         * and start the new level
+         */
+        if (level.currentRow == numRows){
+            allEnemies.forEach(function(enemy){
+                enemy.displayed=true;
+            });
+            init_gems();
+            topMargin = 0;
+            rowTiles.unshift(rowTiles.pop());
+            player.y = startY;
+            level.loadingNextLevel = false;
+            doc.addEventListener('keyup', playerKeyupListener);
+        }
+    }
+
+    // This function starts the animation when the player collects the key
+    function startLoadingNextLevelAnimation(){
+        key.displayed = false;
+        allEnemies.forEach(function (enemy){
+            enemy.displayed = false;
+        });
+        level.currentLevel++;
+        level.loadingNextLevel = true;
+        level.currentRow = 0;
+        topMargin = 0;
+        doc.removeEventListener('keyup', playerKeyupListener);
+    }
+
     /* This function is called by the render function and is called on each game
      * tick. It's purpose is to then call the render functions you have defined
-     * on your enemy and player entities within app.js
+     * on your entities within app.js
      */
     function renderEntities() {
-        /* Loop through all of the objects within the allEnemies array and call
-         * the render function you have defined.
-         */
+        // Render enemies
         allEnemies.forEach(function(enemy) {
             enemy.render();
         });
 
+        // Render gems
         allGems.forEach(function(gem) {
             gem.render();
         });
 
+        // Render the key
         key.render();
 
-        if (key.displayed){
-            if (key.x==player.x && key.y==player.y){
-                key.displayed = false;
-                allEnemies = [];
-                level.currentLevel++;
-                level.loadingNextLevel = true;
-                level.currentRow = 0;
-                topMargin = 0;
-                doc.removeEventListener('keyup', playerKeyupListener);
-            }
-            else{
-                player.render(topMargin);
-            }
-        }
-        else if (!level.loadingNextLevel && allGems.length==0){
-            key.displayed = true;
-        }
-        else{
-            if (!level.loadingNextLevel){
-                player.render(topMargin);
-            }
-            else{
-                if (level.currentRow < numRows-3){
-                    player.y = level.currentRow;
-                }
-                else{
-                    player.y = numRows-3;
-                }
-
-                player.render(topMargin);
-            }
-        }
+        // Render the player
+        player.render();
     }
 
     function displayGameOverScreen(){
@@ -379,7 +447,7 @@ var Engine = (function(global) {
         ctx.strokeStyle = "#67200A";
         ctx.textAlign = 'left';
         ctx.font="30px Georgia";
-        ctx.fillText("1) Use arrows to move.", 10, 6.3*tileHeight);
+        ctx.fillText("1) Use arrow keys to move.", 10, 6.3*tileHeight);
         ctx.fillText("2) Collect all 3 gems to make the key appear.", 10, 6.6*tileHeight);
         ctx.fillText("3) Collect the key to advance to next level.", 10, 6.9*tileHeight);
     }
@@ -420,26 +488,20 @@ var Engine = (function(global) {
         }
 
         ctx.lineWidth = 2;
-        if (player.lives>2){
-            ctx.fillText("Only "+(player.lives-1)+" lives left!",canvas.width/2, 280);
-            ctx.strokeText("Only "+(player.lives-1)+" lives left!",canvas.width/2, 280);
+
+        var txt = "";
+        if (player.lives>1){
+            txt = "Only "+player.lives+" lives left!";
         }
-        else if (player.lives==2){
-            ctx.fillText("Only one life left!",canvas.width/2, 280);
-            ctx.strokeText("Only one life left!",canvas.width/2, 280);
+        else if (player.lives==1){
+            txt = "Only one life left!";
         }
         else{
-            ctx.fillText("Game Over!!",canvas.width/2, 280);
-            ctx.strokeText("Game Over!!",canvas.width/2, 280);
+            txt = "Game Over!!";
         }
-    }
 
-    /* This function does nothing but it could have been a good place to
-     * handle game reset states - maybe a new game menu or a game over screen
-     * those sorts of things. It's only called once by the init() method.
-     */
-    function reset() {
-        init_all();
+        ctx.fillText(txt,canvas.width/2, 280);
+        ctx.strokeText(txt,canvas.width/2, 280);
     }
 
     /* Go ahead and load all of the images we know we're going to need to
