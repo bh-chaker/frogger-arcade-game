@@ -14,8 +14,10 @@ Displayable.prototype.render = function(){
 
 // Enemies our player must avoid
 var Enemy = function(x, y) {
-    // Enemy constructor will take the initial position (x,y) and add
-    // Then, it will call Displayable construtor with 'enemy-bug' image path.
+    /*
+     * Enemy constructor will take the initial position (x,y) and add
+     * Then, it will call Displayable construtor with 'enemy-bug' image path.
+     */
     Displayable.call(this, 'images/enemy-bug.png', x, y, true);
 }
 // Enherit the render function from Displayable
@@ -60,7 +62,7 @@ Player.prototype.update = function (dt) {
     var length = allGems.length;
     if (this.dead){
         // If the player is dead, the games freezes for few seconds.
-        if (Date.now()-this.deadSince > 1000){
+        if (Date.now()-this.deadSince > 2000){
             this.dead = false;
             this.x = startX;
             this.y = startY;

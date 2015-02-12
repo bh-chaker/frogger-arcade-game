@@ -219,7 +219,10 @@ var Engine = (function(global) {
 
         if (level.loadingNextLevel){
             displayLoadingNextLevel();
+        }
 
+        if (player.dead){
+            displayPlayerDead();
         }
 
     }
@@ -399,6 +402,26 @@ var Engine = (function(global) {
         ctx.lineWidth = 2;
         ctx.fillText("Loading Next Level",canvas.width/2, 120);
         ctx.strokeText("Loading Next Level",canvas.width/2, 120);
+    }
+
+    function displayPlayerDead(){
+        ctx.textAlign = "center";
+        ctx.font="80px Georgia";
+        var color1 = "#F40B0B";
+        var color2 = "#F4A60B";
+        var t = Date.now();
+        if ((t-t%500)%1000==0){
+            ctx.fillStyle = color1;
+            ctx.strokeStyle = color2;
+        }
+        else{
+            ctx.fillStyle = color2;
+            ctx.strokeStyle = color1;
+        }
+
+        ctx.lineWidth = 2;
+        ctx.fillText("You are dead!",canvas.width/2, canvas.height/2);
+        ctx.strokeText("You are dead!",canvas.width/2, canvas.height/2);
     }
 
     /* This function does nothing but it could have been a good place to
