@@ -59,7 +59,8 @@ Player.prototype.constructor = Player;
 Player.prototype.update = function (dt) {
     var length = allGems.length;
     if (this.dead){
-        if (Date.now()-this.deadSince > 50000*dt){
+        // If the player is dead, the games freezes for few seconds.
+        if (Date.now()-this.deadSince > 1000){
             this.dead = false;
             this.x = startX;
             this.y = startY;

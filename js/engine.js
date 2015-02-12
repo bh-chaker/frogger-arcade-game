@@ -245,7 +245,6 @@ var Engine = (function(global) {
         if (key.displayed){
             if (key.x==player.x && key.y==player.y){
                 key.displayed = false;
-                console.log('key is hidden');
                 allEnemies = [];
                 level.currentLevel++;
                 level.loadingNextLevel = true;
