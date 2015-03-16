@@ -30,7 +30,10 @@ var Engine = (function(global) {
         tileWidth = 101,
         tileHeight = 101,
         offsetX = 101,
-        offsetY = 83;
+        offsetY = 83,
+        font = 'Unlock',
+        fontSizes = ['30px', '50px', '80px'],
+        colors = ['#F67841', '#67200A', '#F40B0B', '#F4A60B'];
 
     var gameOver = false;
     var gameOverTime;
@@ -348,13 +351,13 @@ var Engine = (function(global) {
     }
 
     function displayGameOverScreen(){
-        ctx.fillStyle = "#F67841";
+        ctx.fillStyle = colors[0];
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         ctx.fillStyle = "white";
-        ctx.strokeStyle = "#67200A";
+        ctx.strokeStyle = colors[1];
         ctx.textAlign = 'center';
-        ctx.font="50px Georgia";
+        ctx.font=fontSizes[1]+' '+font;
 
         ctx.fillText("Game Over", canvas.width/2, 1*tileHeight);
         ctx.fillText("You reached level "+level.currentLevel, canvas.width/2, 2*tileHeight);
@@ -393,28 +396,28 @@ var Engine = (function(global) {
 
     function displayFooterLivesCount(){
         ctx.drawImage(Resources.get('images/Heart.png'), 0, (numRows-1) * offsetY + 35);
-        ctx.font="50px Georgia";
-        ctx.fillStyle = "#F67841";
-        ctx.strokeStyle = "#67200A";
+        ctx.font=fontSizes[1]+' '+font;
+        ctx.fillStyle = colors[0];
+        ctx.strokeStyle = colors[1];
         ctx.lineWidth = 2;
         ctx.fillText("x "+player.lives,111, numRows * offsetY + 50);
         ctx.strokeText("x "+player.lives,111, numRows * offsetY + 50);
     }
 
     function displayFooterGemsCont(){
-        ctx.drawImage(Resources.get('images/Gem Blue.png'), offsetX*2+6, (numRows-1) * offsetY + 15);
-        ctx.font="50px Georgia";
-        ctx.fillStyle = "#F67841";
-        ctx.strokeStyle = "#67200A";
+        ctx.drawImage(Resources.get('images/Gem Blue.png'), offsetX*2+2, (numRows-1) * offsetY + 15);
+        ctx.font=fontSizes[1]+' '+font;
+        ctx.fillStyle = colors[0];
+        ctx.strokeStyle = colors[1];
         ctx.lineWidth = 2;
-        ctx.fillText("x "+player.gems,offsetX*3+10, numRows * offsetY + 50);
-        ctx.strokeText("x "+player.gems,offsetX*3+10, numRows * offsetY + 50);
+        ctx.fillText("x "+player.gems,offsetX*3+3, numRows * offsetY + 50);
+        ctx.strokeText("x "+player.gems,offsetX*3+3, numRows * offsetY + 50);
     }
 
     function displayFooterLevel(){
-        ctx.font="50px Georgia";
-        ctx.fillStyle = "#F67841";
-        ctx.strokeStyle = "#67200A";
+        ctx.font=fontSizes[1]+' '+font;
+        ctx.fillStyle = colors[0];
+        ctx.strokeStyle = colors[1];
         ctx.lineWidth = 2;
         ctx.fillText("Level",offsetX*4+10, numRows * offsetY + 30);
         ctx.strokeText("Level",offsetX*4+10, numRows * offsetY + 30);
@@ -426,9 +429,9 @@ var Engine = (function(global) {
 
     function displayFooterTime(){
         ctx.textAlign = "left";
-        ctx.font="50px Georgia";
-        ctx.fillStyle = "#F67841";
-        ctx.strokeStyle = "#67200A";
+        ctx.font=fontSizes[1]+' '+font;
+        ctx.fillStyle = colors[0];
+        ctx.strokeStyle = colors[1];
         ctx.lineWidth = 2;
 
         var playedTime = Date.now() - startTime;
@@ -441,12 +444,12 @@ var Engine = (function(global) {
     }
 
     function displayInstructions(){
-        ctx.fillStyle = "#F67841";
+        ctx.fillStyle = colors[0];
         ctx.fillRect(0, 6*tileWidth + 2, canvas.width, tileWidth);
         ctx.fillStyle = "white";
-        ctx.strokeStyle = "#67200A";
+        ctx.strokeStyle = colors[1];
         ctx.textAlign = 'left';
-        ctx.font="30px Georgia";
+        ctx.font=fontSizes[0]+' '+font;
         ctx.fillText("1) Use arrow keys to move.", 10, 6.3*tileHeight);
         ctx.fillText("2) Collect all 3 gems to make the key appear.", 10, 6.6*tileHeight);
         ctx.fillText("3) Collect the key to advance to next level.", 10, 6.9*tileHeight);
@@ -454,17 +457,15 @@ var Engine = (function(global) {
 
     function displayLoadingNextLevel(){
         ctx.textAlign = "center";
-        ctx.font="80px Georgia";
-        var color1 = "#F67841";
-        var color2 = "#67200A";
+        ctx.font = fontSizes[2]+' '+font;
         var t = Date.now();
         if ((t-t%500)%1000==0){
-            ctx.fillStyle = color1;
-            ctx.strokeStyle = color2;
+            ctx.fillStyle = colors[0];
+            ctx.strokeStyle = colors[1];
         }
         else{
-            ctx.fillStyle = color2;
-            ctx.strokeStyle = color1;
+            ctx.fillStyle = colors[1];
+            ctx.strokeStyle = colors[0];
         }
 
         ctx.lineWidth = 2;
@@ -474,17 +475,15 @@ var Engine = (function(global) {
 
     function displayPlayerDead(){
         ctx.textAlign = "center";
-        ctx.font="80px Georgia";
-        var color1 = "#F40B0B";
-        var color2 = "#F4A60B";
+        ctx.font = fontSizes[2]+' '+font;
         var t = Date.now();
         if ((t-t%500)%1000==0){
-            ctx.fillStyle = color1;
-            ctx.strokeStyle = color2;
+            ctx.fillStyle = colors[2];
+            ctx.strokeStyle = colors[3];
         }
         else{
-            ctx.fillStyle = color2;
-            ctx.strokeStyle = color1;
+            ctx.fillStyle = colors[3];
+            ctx.strokeStyle = colors[2];
         }
 
         ctx.lineWidth = 2;
@@ -550,8 +549,7 @@ function msToTime(s) {
   s = (s - ms) / 1000;
   var secs = s % 60;
   s = (s - secs) / 60;
-  var mins = s % 60;
-  var hrs = (s - mins) / 60;
+  var mins = s;
 
-  return addZ(hrs) + ':' + addZ(mins) + ':' + addZ(secs) + '.' + Math.floor(ms/100.0);
+  return  addZ(mins) + ':' + addZ(secs) + '.' + Math.floor(ms/100.0);
 }
